@@ -1,9 +1,7 @@
+from flask import Flask
 
-from fastapi import FastAPI
+app = Flask(__name__)
 
-app = FastAPI()
-
-@app.get("/")
-def read_root():
-	"""Health check endpoint."""
-	return {"message": "SpotifYT API is running."}
+@app.route("/")
+def home():
+	return {"message": "SpotifYT Flask API is running."}
