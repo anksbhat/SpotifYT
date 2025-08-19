@@ -21,8 +21,48 @@ YOUTUBE_CLIENT_SECRET = os.environ.get("YOUTUBE_CLIENT_SECRET")
 YOUTUBE_REDIRECT_URI = os.environ.get("YOUTUBE_REDIRECT_URI")
 YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube"
 
+
 # 1. YouTube login endpoint: redirects user to Google's OAuth consent screen
-# (Implementation for YouTube login endpoint should be added here if needed)
+@app.route("/youtube/login")
+def youtube_login():
+	params = {
+		"client_id": YOUTUBE_CLIENT_ID,
+		"redirect_uri": YOUTUBE_REDIRECT_URI,
+		"response_type": "code",
+		"scope": YOUTUBE_SCOPE,
+		"access_type": "offline",
+		"prompt": "consent"
+	}
+	url = f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
+	return redirect(url)
+
+# 2. YouTube callback endpoint: Google redirects here after user logs in
+@app.route("/youtube/callback")
+def youtube_callback():
+	code = request.args.get("code")
+	error = request.args.get("error")
+	if error:
+		return f"Error: {error}", 400
+	if not code:
+		return "No code provided", 400
+
+	# Exchange code for access token
+	token_url = "https://oauth2.googleapis.com/token"
+	payload = {
+		"code": code,
+		"client_id": YOUTUBE_CLIENT_ID,
+		"client_secret": YOUTUBE_CLIENT_SECRET,
+		"redirect_uri": YOUTUBE_REDIRECT_URI,
+		"grant_type": "authorization_code"
+	}
+	headers = {"Content-Type": "application/x-www-form-urlencoded"}
+	response = requests.post(token_url, data=payload, headers=headers)
+	if response.status_code != 200:
+		return f"Failed to get token: {response.text}", 400
+	token_info = response.json()
+	# Save token in session (for demo; in production, use a database or secure storage)
+	session["youtube_token_info"] = token_info
+	return jsonify({"message": "YouTube authentication successful!", "token_info": token_info})
 
 # --- Endpoints ---
 
