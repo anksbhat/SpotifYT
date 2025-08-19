@@ -1,3 +1,20 @@
+# Endpoint to fetch user's Spotify playlists using the access token
+@app.route("/spotify/playlists")
+def get_spotify_playlists():
+	# Get token info from session (in production, use a database or secure storage)
+	token_info = session.get("spotify_token_info")
+	if not token_info or "access_token" not in token_info:
+		return {"error": "User not authenticated with Spotify."}, 401
+
+	access_token = token_info["access_token"]
+	# Call Spotify API to get current user's playlists
+	headers = {"Authorization": f"Bearer {access_token}"}
+	playlists_url = "https://api.spotify.com/v1/me/playlists"
+	response = requests.get(playlists_url, headers=headers)
+	if response.status_code != 200:
+		return {"error": "Failed to fetch playlists.", "details": response.text}, 400
+	playlists = response.json()
+	return playlists
 from flask import Flask, redirect, request, session, url_for, jsonify
 import os
 import requests
