@@ -36,7 +36,7 @@ def get_spotify_playlist_tracks(playlist_id):
 	tracks = response.json()
 	return tracks
 
-# Endpoint to fetch user's Spotify playlists using the access token
+# Endpoint to fetch user's Spotify playlists using the access token (with pagination)
 @app.route("/spotify/playlists")
 def get_spotify_playlists():
 	# Get token info from session (in production, use a database or secure storage)
@@ -45,14 +45,21 @@ def get_spotify_playlists():
 		return {"error": "User not authenticated with Spotify."}, 401
 
 	access_token = token_info["access_token"]
-	# Call Spotify API to get current user's playlists
 	headers = {"Authorization": f"Bearer {access_token}"}
 	playlists_url = "https://api.spotify.com/v1/me/playlists"
-	response = requests.get(playlists_url, headers=headers)
-	if response.status_code != 200:
-		return {"error": "Failed to fetch playlists.", "details": response.text}, 400
-	playlists = response.json()
-	return playlists
+	all_playlists = []
+	url = playlists_url
+	# Fetch all pages of playlists
+	while url:
+		response = requests.get(url, headers=headers)
+		if response.status_code != 200:
+			return {"error": "Failed to fetch playlists.", "details": response.text}, 400
+		data = response.json()
+		all_playlists.extend(data.get("items", []))
+		url = data.get("next")
+	# Return just the playlist names and IDs for easier debugging
+	result = [{"name": p["name"], "id": p["id"]} for p in all_playlists]
+	return {"total": len(result), "playlists": result}
 
 @app.route("/")
 def home():
