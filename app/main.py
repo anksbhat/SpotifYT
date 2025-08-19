@@ -1,3 +1,20 @@
+# Endpoint to fetch tracks from a given Spotify playlist
+@app.route("/spotify/playlist/<playlist_id>/tracks")
+def get_spotify_playlist_tracks(playlist_id):
+	# Get token info from session (in production, use a database or secure storage)
+	token_info = session.get("spotify_token_info")
+	if not token_info or "access_token" not in token_info:
+		return {"error": "User not authenticated with Spotify."}, 401
+
+	access_token = token_info["access_token"]
+	# Call Spotify API to get tracks from the playlist
+	headers = {"Authorization": f"Bearer {access_token}"}
+	tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+	response = requests.get(tracks_url, headers=headers)
+	if response.status_code != 200:
+		return {"error": "Failed to fetch playlist tracks.", "details": response.text}, 400
+	tracks = response.json()
+	return tracks
 # Endpoint to fetch user's Spotify playlists using the access token
 @app.route("/spotify/playlists")
 def get_spotify_playlists():
