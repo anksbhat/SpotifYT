@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+spotipy
+google-api-python-client
+oauth2client
+python-dotenv
