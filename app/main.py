@@ -1,3 +1,23 @@
+
+# --- Imports and App Setup (must be at the top) ---
+from flask import Flask, redirect, request, session, url_for, jsonify
+import os
+import requests
+from urllib.parse import urlencode
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev")  # Needed for session
+
+# Spotify API credentials from environment variables
+SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
+SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET")
+SPOTIFY_REDIRECT_URI = os.environ.get("SPOTIFY_REDIRECT_URI")
+
+# Spotify scopes: what permissions we want from the user
+SPOTIFY_SCOPE = "playlist-read-private playlist-read-collaborative user-library-read"
+
+# --- Endpoints ---
+
 # Endpoint to fetch tracks from a given Spotify playlist
 @app.route("/spotify/playlist/<playlist_id>/tracks")
 def get_spotify_playlist_tracks(playlist_id):
@@ -15,6 +35,7 @@ def get_spotify_playlist_tracks(playlist_id):
 		return {"error": "Failed to fetch playlist tracks.", "details": response.text}, 400
 	tracks = response.json()
 	return tracks
+
 # Endpoint to fetch user's Spotify playlists using the access token
 @app.route("/spotify/playlists")
 def get_spotify_playlists():
@@ -32,21 +53,6 @@ def get_spotify_playlists():
 		return {"error": "Failed to fetch playlists.", "details": response.text}, 400
 	playlists = response.json()
 	return playlists
-from flask import Flask, redirect, request, session, url_for, jsonify
-import os
-import requests
-from urllib.parse import urlencode
-
-app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev")  # Needed for session
-
-# Spotify API credentials from environment variables
-SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
-SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET")
-SPOTIFY_REDIRECT_URI = os.environ.get("SPOTIFY_REDIRECT_URI")
-
-# Spotify scopes: what permissions we want from the user
-SPOTIFY_SCOPE = "playlist-read-private playlist-read-collaborative user-library-read"
 
 @app.route("/")
 def home():
